@@ -751,6 +751,38 @@
             speakerIndicator.style.display = 'block';
         }
 
+        function playNoteSequence(startTime, panValue) {
+            // Play a C major arpeggio: C4, E4, G4, C5 and back down
+            const notes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 261.63]; // C-E-G-C-G-E-C
+            const noteDuration = 0.4; // Each note lasts 0.4 seconds
+
+            let currentTime = startTime;
+
+            notes.forEach((frequency) => {
+                const osc = speakerAudioContext.createOscillator();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(frequency, currentTime);
+
+                const noteGain = speakerAudioContext.createGain();
+                noteGain.gain.setValueAtTime(0, currentTime);
+                noteGain.gain.linearRampToValueAtTime(0.2, currentTime + 0.05); // Attack
+                noteGain.gain.setValueAtTime(0.2, currentTime + noteDuration - 0.1);
+                noteGain.gain.linearRampToValueAtTime(0, currentTime + noteDuration); // Release
+
+                const notePanner = speakerAudioContext.createStereoPanner();
+                notePanner.pan.setValueAtTime(panValue, currentTime);
+
+                osc.connect(noteGain);
+                noteGain.connect(notePanner);
+                notePanner.connect(speakerAudioContext.destination);
+
+                osc.start(currentTime);
+                osc.stop(currentTime + noteDuration);
+
+                currentTime += noteDuration;
+            });
+        }
+
         async function startSpeakerTest() {
             try {
                 startSpeakerBtn.disabled = true;
@@ -760,51 +792,32 @@
                 // Create audio context
                 speakerAudioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-                // Create oscillator for tone generation
-                speakerOscillator = speakerAudioContext.createOscillator();
-                speakerOscillator.type = 'sine';
-                speakerOscillator.frequency.setValueAtTime(440, speakerAudioContext.currentTime); // A4 note
-
-                // Create gain node for volume control
-                speakerGainNode = speakerAudioContext.createGain();
-                speakerGainNode.gain.setValueAtTime(0.3, speakerAudioContext.currentTime); // 30% volume
-
-                // Create stereo panner for left/right control
-                speakerPanner = speakerAudioContext.createStereoPanner();
-                speakerPanner.pan.setValueAtTime(0, speakerAudioContext.currentTime); // Start at center
-
-                // Connect nodes: oscillator -> gain -> panner -> destination
-                speakerOscillator.connect(speakerGainNode);
-                speakerGainNode.connect(speakerPanner);
-                speakerPanner.connect(speakerAudioContext.destination);
-
-                // Start oscillator
-                speakerOscillator.start();
-
                 showSpeakerIndicator();
+
+                const startTime = speakerAudioContext.currentTime;
 
                 // Phase 1: Center (0-3s)
                 speakerPhase.textContent = 'Center';
-                speakerPanner.pan.setValueAtTime(0, speakerAudioContext.currentTime);
-                showSpeakerStatus('Playing tone from center speakers', 'info');
+                showSpeakerStatus('Playing notes from center speakers', 'info');
+                playNoteSequence(startTime, 0);
 
                 // Phase 2: Left (3-6s)
                 speakerTestTimer = setTimeout(() => {
                     speakerPhase.textContent = 'Left';
-                    speakerPanner.pan.setValueAtTime(-1, speakerAudioContext.currentTime);
-                    showSpeakerStatus('Playing tone from left speaker', 'info');
+                    showSpeakerStatus('Playing notes from left speaker', 'info');
+                    playNoteSequence(speakerAudioContext.currentTime, -1);
 
                     // Phase 3: Right (6-9s)
                     speakerTestTimer = setTimeout(() => {
                         speakerPhase.textContent = 'Right';
-                        speakerPanner.pan.setValueAtTime(1, speakerAudioContext.currentTime);
-                        showSpeakerStatus('Playing tone from right speaker', 'info');
+                        showSpeakerStatus('Playing notes from right speaker', 'info');
+                        playNoteSequence(speakerAudioContext.currentTime, 1);
 
                         // Phase 4: Center again (9-12s)
                         speakerTestTimer = setTimeout(() => {
                             speakerPhase.textContent = 'Center';
-                            speakerPanner.pan.setValueAtTime(0, speakerAudioContext.currentTime);
-                            showSpeakerStatus('Playing tone from center speakers', 'info');
+                            showSpeakerStatus('Playing notes from center speakers', 'info');
+                            playNoteSequence(speakerAudioContext.currentTime, 0);
 
                             // End test (12s)
                             speakerTestTimer = setTimeout(() => {
