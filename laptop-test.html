@@ -123,7 +123,7 @@
             display: none;
         }
 
-        #audioMessage {
+        #audioMessage, #speakerMessage {
             text-align: center;
             padding: 60px 20px;
             color: #666;
@@ -240,6 +240,24 @@
         </div>
 
         <div id="audioStatus"></div>
+    </div>
+
+    <div class="container">
+        <h1>Speaker Test Tool</h1>
+        <p class="subtitle">Test if your laptop's speakers are working properly</p>
+
+        <div id="speakerMessage">Click the button below to start the speaker test</div>
+        <div id="speakerIndicator" class="trackpad-info" style="display: none;">
+            <div style="font-size: 24px; font-weight: bold; color: #667eea;" id="speakerPhase">Center</div>
+            <div style="margin-top: 10px; color: #666;">Listen for the tone</div>
+        </div>
+
+        <div class="controls">
+            <button id="startSpeakerBtn" class="button">Start Speaker Test</button>
+            <button id="stopSpeakerBtn" class="button" style="display: none;">Stop Test</button>
+        </div>
+
+        <div id="speakerStatus"></div>
     </div>
 
     <div class="container">
@@ -703,6 +721,149 @@
             }
         });
 
+        // ===== SPEAKER TEST CODE =====
+        const speakerMessage = document.getElementById('speakerMessage');
+        const speakerIndicator = document.getElementById('speakerIndicator');
+        const speakerPhase = document.getElementById('speakerPhase');
+        const speakerStatus = document.getElementById('speakerStatus');
+        const startSpeakerBtn = document.getElementById('startSpeakerBtn');
+        const stopSpeakerBtn = document.getElementById('stopSpeakerBtn');
+
+        let speakerAudioContext = null;
+        let speakerOscillator = null;
+        let speakerGainNode = null;
+        let speakerPanner = null;
+        let speakerTestTimer = null;
+
+        function showSpeakerStatus(text, type) {
+            speakerStatus.innerHTML = text;
+            speakerStatus.className = 'status ' + type;
+        }
+
+        function showSpeakerMessage(text) {
+            speakerMessage.style.display = 'block';
+            speakerMessage.innerHTML = text;
+            speakerIndicator.style.display = 'none';
+        }
+
+        function showSpeakerIndicator() {
+            speakerMessage.style.display = 'none';
+            speakerIndicator.style.display = 'block';
+        }
+
+        async function startSpeakerTest() {
+            try {
+                startSpeakerBtn.disabled = true;
+                startSpeakerBtn.style.display = 'none';
+                stopSpeakerBtn.style.display = 'inline-block';
+
+                // Create audio context
+                speakerAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+                // Create oscillator for tone generation
+                speakerOscillator = speakerAudioContext.createOscillator();
+                speakerOscillator.type = 'sine';
+                speakerOscillator.frequency.setValueAtTime(440, speakerAudioContext.currentTime); // A4 note
+
+                // Create gain node for volume control
+                speakerGainNode = speakerAudioContext.createGain();
+                speakerGainNode.gain.setValueAtTime(0.3, speakerAudioContext.currentTime); // 30% volume
+
+                // Create stereo panner for left/right control
+                speakerPanner = speakerAudioContext.createStereoPanner();
+                speakerPanner.pan.setValueAtTime(0, speakerAudioContext.currentTime); // Start at center
+
+                // Connect nodes: oscillator -> gain -> panner -> destination
+                speakerOscillator.connect(speakerGainNode);
+                speakerGainNode.connect(speakerPanner);
+                speakerPanner.connect(speakerAudioContext.destination);
+
+                // Start oscillator
+                speakerOscillator.start();
+
+                showSpeakerIndicator();
+
+                // Phase 1: Center (0-3s)
+                speakerPhase.textContent = 'Center';
+                speakerPanner.pan.setValueAtTime(0, speakerAudioContext.currentTime);
+                showSpeakerStatus('Playing tone from center speakers', 'info');
+
+                // Phase 2: Left (3-6s)
+                speakerTestTimer = setTimeout(() => {
+                    speakerPhase.textContent = 'Left';
+                    speakerPanner.pan.setValueAtTime(-1, speakerAudioContext.currentTime);
+                    showSpeakerStatus('Playing tone from left speaker', 'info');
+
+                    // Phase 3: Right (6-9s)
+                    speakerTestTimer = setTimeout(() => {
+                        speakerPhase.textContent = 'Right';
+                        speakerPanner.pan.setValueAtTime(1, speakerAudioContext.currentTime);
+                        showSpeakerStatus('Playing tone from right speaker', 'info');
+
+                        // Phase 4: Center again (9-12s)
+                        speakerTestTimer = setTimeout(() => {
+                            speakerPhase.textContent = 'Center';
+                            speakerPanner.pan.setValueAtTime(0, speakerAudioContext.currentTime);
+                            showSpeakerStatus('Playing tone from center speakers', 'info');
+
+                            // End test (12s)
+                            speakerTestTimer = setTimeout(() => {
+                                stopSpeakerTest();
+                                showSpeakerStatus('✓ Speaker test complete!', 'success');
+                            }, 3000);
+                        }, 3000);
+                    }, 3000);
+                }, 3000);
+
+            } catch (error) {
+                console.error('Error starting speaker test:', error);
+                showSpeakerMessage('Error starting speaker test. Please try again.');
+                showSpeakerStatus('✗ Speaker test failed', 'error');
+                cleanupSpeaker();
+                startSpeakerBtn.disabled = false;
+                startSpeakerBtn.style.display = 'inline-block';
+                stopSpeakerBtn.style.display = 'none';
+            }
+        }
+
+        function stopSpeakerTest() {
+            if (speakerTestTimer) {
+                clearTimeout(speakerTestTimer);
+                speakerTestTimer = null;
+            }
+
+            cleanupSpeaker();
+
+            showSpeakerMessage('Speaker test stopped. Click the button below to test again.');
+
+            startSpeakerBtn.disabled = false;
+            startSpeakerBtn.style.display = 'inline-block';
+            stopSpeakerBtn.style.display = 'none';
+        }
+
+        function cleanupSpeaker() {
+            if (speakerOscillator) {
+                try {
+                    speakerOscillator.stop();
+                } catch (e) {
+                    // Oscillator already stopped
+                }
+                speakerOscillator = null;
+            }
+
+            if (speakerAudioContext) {
+                speakerAudioContext.close();
+                speakerAudioContext = null;
+            }
+
+            speakerGainNode = null;
+            speakerPanner = null;
+        }
+
+        // Event listeners for speaker test
+        startSpeakerBtn.addEventListener('click', startSpeakerTest);
+        stopSpeakerBtn.addEventListener('click', stopSpeakerTest);
+
         // ===== TRACKPAD BUTTON TEST CODE =====
         const leftButton = document.getElementById('leftButton');
         const rightButton = document.getElementById('rightButton');
@@ -747,6 +908,11 @@
 
         // Initial status message
         showTrackpadStatus('Click the left or right mouse button to test your trackpad buttons', 'info');
+
+        // Clean up all tests when page is closed
+        window.addEventListener('beforeunload', () => {
+            cleanupSpeaker();
+        });
     </script>
 </body>
 </html>
