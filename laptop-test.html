@@ -239,6 +239,7 @@
         .key-2-25 { min-width: 90px; }
         .key-2-5 { min-width: 100px; }
         .key-6 { min-width: 240px; }
+        .key-nav { min-width: 50px; }
 
         #keyboardMessage {
             text-align: center;
@@ -452,26 +453,34 @@
                 <div class="key key-1-5" data-key="ControlRight">Ctrl</div>
             </div>
 
-            <!-- Arrow Keys -->
-            <div class="keyboard-row" style="margin-top: 10px;">
-                <div style="min-width: 40px;"></div>
-                <div class="key" data-key="ArrowUp">↑</div>
-            </div>
-            <div class="keyboard-row">
-                <div class="key" data-key="ArrowLeft">←</div>
-                <div class="key" data-key="ArrowDown">↓</div>
-                <div class="key" data-key="ArrowRight">→</div>
-            </div>
+            <!-- Bottom section: Arrow Keys and Navigation Cluster -->
+            <div style="display: flex; gap: 60px; justify-content: center; margin-top: 10px;">
+                <!-- Arrow Keys (Left) -->
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div class="keyboard-row" style="justify-content: flex-start; margin-bottom: 0;">
+                        <div style="min-width: 40px;"></div>
+                        <div class="key" data-key="ArrowUp">↑</div>
+                    </div>
+                    <div class="keyboard-row" style="justify-content: flex-start; margin-bottom: 0;">
+                        <div class="key" data-key="ArrowLeft">←</div>
+                        <div class="key" data-key="ArrowDown">↓</div>
+                        <div class="key" data-key="ArrowRight">→</div>
+                    </div>
+                </div>
 
-            <!-- Navigation Cluster -->
-            <div class="keyboard-row" style="margin-top: 10px;">
-                <div class="key" data-key="Insert">Ins</div>
-                <div class="key" data-key="Home">Home</div>
-                <div class="key" data-key="PageUp">PgUp</div>
-                <div style="min-width: 20px;"></div>
-                <div class="key" data-key="Delete">Del</div>
-                <div class="key" data-key="End">End</div>
-                <div class="key" data-key="PageDown">PgDn</div>
+                <!-- Navigation Cluster (Right) -->
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div class="keyboard-row" style="justify-content: flex-start; margin-bottom: 0;">
+                        <div class="key key-nav" data-key="Insert">Ins</div>
+                        <div class="key key-nav" data-key="Home">Home</div>
+                        <div class="key key-nav" data-key="PageUp">PgUp</div>
+                    </div>
+                    <div class="keyboard-row" style="justify-content: flex-start; margin-bottom: 0;">
+                        <div class="key key-nav" data-key="Delete">Del</div>
+                        <div class="key key-nav" data-key="End">End</div>
+                        <div class="key key-nav" data-key="PageDown">PgDn</div>
+                    </div>
+                </div>
             </div>
         </div>
 
