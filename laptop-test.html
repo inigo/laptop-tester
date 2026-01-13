@@ -1166,15 +1166,46 @@
             // Normalize key for lookup
             const normalizedKey = key.toLowerCase();
 
-            // Try exact match first
-            let keyElement = document.querySelector(`.key[data-key="${key}"]`);
+            try {
+                // Try exact match first
+                let keyElement = document.querySelector(`.key[data-key="${key}"]`);
 
-            // Try lowercase match for letters
-            if (!keyElement) {
-                keyElement = document.querySelector(`.key[data-key="${normalizedKey}"]`);
+                // Try lowercase match for letters
+                if (!keyElement) {
+                    keyElement = document.querySelector(`.key[data-key="${normalizedKey}"]`);
+                }
+
+                return keyElement;
+            } catch (e) {
+                // CSS selector might fail for special characters like quotes
+                return null;
             }
+        }
 
-            return keyElement;
+        function codeToBaseKey(code) {
+            // Convert event.code to base key character
+            if (code.startsWith('Digit')) {
+                return code.replace('Digit', '');
+            }
+            if (code.startsWith('Key')) {
+                return code.replace('Key', '').toLowerCase();
+            }
+            // Map common codes to base characters
+            const codeMap = {
+                'Minus': '-',
+                'Equal': '=',
+                'BracketLeft': '[',
+                'BracketRight': ']',
+                'Backslash': '\\',
+                'IntlBackslash': '\\',
+                'Semicolon': ';',
+                'Quote': "'",
+                'Backquote': '`',
+                'Comma': ',',
+                'Period': '.',
+                'Slash': '/'
+            };
+            return codeMap[code] || null;
         }
 
         function handleKeyDown(event) {
@@ -1198,30 +1229,30 @@
                 keyElement = document.querySelector(`.key[data-key="${code}"]`);
             }
 
+            // Try to convert code to base key (e.g., Digit2 -> 2, KeyA -> a)
+            if (!keyElement) {
+                const baseKey = codeToBaseKey(code);
+                if (baseKey) {
+                    keyElement = document.querySelector(`.key[data-key="${baseKey}"]`);
+                }
+            }
+
             // Special handling for backslash which might report as different codes
             if (!keyElement && (key === '\\' || code === 'Backslash' || code === 'IntlBackslash')) {
                 keyElement = document.querySelector(`.key[data-key="\\\\"]`);
-            }
-
-            // Special handling for quote
-            if (!keyElement && (key === "'" || code === 'Quote')) {
-                keyElement = document.querySelector(`.key[data-key="'"]`);
-            }
-
-            // Special handling for slash
-            if (!keyElement && (key === "/" || code === 'Slash')) {
-                keyElement = document.querySelector(`.key[data-key="/"]`);
             }
 
             if (keyElement) {
                 // Add active state
                 keyElement.classList.add('active');
 
-                // Mark as pressed (permanently)
+                // Mark as pressed (permanently) - only set green border once
                 if (!keyElement.classList.contains('pressed')) {
                     keyElement.classList.add('pressed');
-                    playKeyClick();
                 }
+
+                // Play click sound every time
+                playKeyClick();
             }
         }
 
@@ -1240,19 +1271,17 @@
                 keyElement = document.querySelector(`.key[data-key="${code}"]`);
             }
 
+            // Try to convert code to base key (e.g., Digit2 -> 2, KeyA -> a)
+            if (!keyElement) {
+                const baseKey = codeToBaseKey(code);
+                if (baseKey) {
+                    keyElement = document.querySelector(`.key[data-key="${baseKey}"]`);
+                }
+            }
+
             // Special handling for backslash
             if (!keyElement && (key === '\\' || code === 'Backslash' || code === 'IntlBackslash')) {
                 keyElement = document.querySelector(`.key[data-key="\\\\"]`);
-            }
-
-            // Special handling for quote
-            if (!keyElement && (key === "'" || code === 'Quote')) {
-                keyElement = document.querySelector(`.key[data-key="'"]`);
-            }
-
-            // Special handling for slash
-            if (!keyElement && (key === "/" || code === 'Slash')) {
-                keyElement = document.querySelector(`.key[data-key="/"]`);
             }
 
             if (keyElement) {
