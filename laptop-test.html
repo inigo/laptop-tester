@@ -183,6 +183,72 @@
             margin-top: 20px;
         }
 
+        .keyboard-container {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+
+        .keyboard-row {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 4px;
+            justify-content: center;
+        }
+
+        .key {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            padding: 8px;
+            min-width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 500;
+            color: #333;
+            cursor: default;
+            user-select: none;
+            transition: all 0.1s ease;
+            text-align: center;
+        }
+
+        .key.active {
+            background: #667eea;
+            color: white;
+            transform: scale(0.95);
+        }
+
+        .key.pressed {
+            border-color: #4ade80;
+            border-width: 3px;
+        }
+
+        .key.inactive {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .key-1-5 { min-width: 60px; }
+        .key-1-75 { min-width: 70px; }
+        .key-2 { min-width: 80px; }
+        .key-2-25 { min-width: 90px; }
+        .key-2-5 { min-width: 100px; }
+        .key-6 { min-width: 240px; }
+
+        #keyboardMessage {
+            text-align: center;
+            padding: 30px 20px;
+            color: #666;
+            font-size: 16px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
         @media (max-width: 600px) {
             .container {
                 padding: 20px;
@@ -278,6 +344,143 @@
         </div>
 
         <div id="trackpadStatus"></div>
+    </div>
+
+    <div class="container">
+        <h1>Keyboard Test Tool</h1>
+        <p class="subtitle">Test if your laptop's keyboard keys are working properly</p>
+
+        <div id="keyboardMessage">Click the button below to start the keyboard test</div>
+
+        <div class="keyboard-container" id="keyboardContainer" style="display: none;">
+            <!-- Function Row -->
+            <div class="keyboard-row">
+                <div class="key" data-key="Escape">Esc</div>
+                <div class="key" data-key="F1">F1</div>
+                <div class="key" data-key="F2">F2</div>
+                <div class="key" data-key="F3">F3</div>
+                <div class="key" data-key="F4">F4</div>
+                <div class="key" data-key="F5">F5</div>
+                <div class="key" data-key="F6">F6</div>
+                <div class="key" data-key="F7">F7</div>
+                <div class="key" data-key="F8">F8</div>
+                <div class="key" data-key="F9">F9</div>
+                <div class="key" data-key="F10">F10</div>
+                <div class="key" data-key="F11">F11</div>
+                <div class="key" data-key="F12">F12</div>
+            </div>
+
+            <!-- Number Row -->
+            <div class="keyboard-row">
+                <div class="key" data-key="`">` ¬</div>
+                <div class="key" data-key="1">1 !</div>
+                <div class="key" data-key="2">2 "</div>
+                <div class="key" data-key="3">3 £</div>
+                <div class="key" data-key="4">4 $</div>
+                <div class="key" data-key="5">5 %</div>
+                <div class="key" data-key="6">6 ^</div>
+                <div class="key" data-key="7">7 &</div>
+                <div class="key" data-key="8">8 *</div>
+                <div class="key" data-key="9">9 (</div>
+                <div class="key" data-key="0">0 )</div>
+                <div class="key" data-key="-">- _</div>
+                <div class="key" data-key="=">=  +</div>
+                <div class="key key-2" data-key="Backspace">Backspace</div>
+            </div>
+
+            <!-- QWERTY Row -->
+            <div class="keyboard-row">
+                <div class="key key-1-5" data-key="Tab">Tab</div>
+                <div class="key" data-key="q">Q</div>
+                <div class="key" data-key="w">W</div>
+                <div class="key" data-key="e">E</div>
+                <div class="key" data-key="r">R</div>
+                <div class="key" data-key="t">T</div>
+                <div class="key" data-key="y">Y</div>
+                <div class="key" data-key="u">U</div>
+                <div class="key" data-key="i">I</div>
+                <div class="key" data-key="o">O</div>
+                <div class="key" data-key="p">P</div>
+                <div class="key" data-key="[">[  {</div>
+                <div class="key" data-key="]">]  }</div>
+                <div class="key key-1-5" data-key="Enter">Enter</div>
+            </div>
+
+            <!-- ASDF Row -->
+            <div class="keyboard-row">
+                <div class="key key-1-75" data-key="CapsLock">Caps</div>
+                <div class="key" data-key="a">A</div>
+                <div class="key" data-key="s">S</div>
+                <div class="key" data-key="d">D</div>
+                <div class="key" data-key="f">F</div>
+                <div class="key" data-key="g">G</div>
+                <div class="key" data-key="h">H</div>
+                <div class="key" data-key="j">J</div>
+                <div class="key" data-key="k">K</div>
+                <div class="key" data-key="l">L</div>
+                <div class="key" data-key=";">; :</div>
+                <div class="key" data-key="'">' @</div>
+                <div class="key" data-key="#"># ~</div>
+            </div>
+
+            <!-- ZXCV Row -->
+            <div class="keyboard-row">
+                <div class="key key-2-25" data-key="ShiftLeft">Shift</div>
+                <div class="key" data-key="\">\ |</div>
+                <div class="key" data-key="z">Z</div>
+                <div class="key" data-key="x">X</div>
+                <div class="key" data-key="c">C</div>
+                <div class="key" data-key="v">V</div>
+                <div class="key" data-key="b">B</div>
+                <div class="key" data-key="n">N</div>
+                <div class="key" data-key="m">M</div>
+                <div class="key" data-key=",">, &lt;</div>
+                <div class="key" data-key=".">. &gt;</div>
+                <div class="key" data-key="/">/ ?</div>
+                <div class="key key-2-25" data-key="ShiftRight">Shift</div>
+            </div>
+
+            <!-- Bottom Row -->
+            <div class="keyboard-row">
+                <div class="key key-1-5" data-key="ControlLeft">Ctrl</div>
+                <div class="key key-1-5" data-key="MetaLeft">Win</div>
+                <div class="key key-1-5" data-key="AltLeft">Alt</div>
+                <div class="key key-6" data-key=" ">Space</div>
+                <div class="key key-1-5" data-key="AltRight">Alt Gr</div>
+                <div class="key key-1-5" data-key="MetaRight">Win</div>
+                <div class="key key-1-5" data-key="ContextMenu">Menu</div>
+                <div class="key key-1-5" data-key="ControlRight">Ctrl</div>
+            </div>
+
+            <!-- Arrow Keys -->
+            <div class="keyboard-row" style="margin-top: 10px;">
+                <div style="min-width: 40px;"></div>
+                <div class="key" data-key="ArrowUp">↑</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="key" data-key="ArrowLeft">←</div>
+                <div class="key" data-key="ArrowDown">↓</div>
+                <div class="key" data-key="ArrowRight">→</div>
+            </div>
+
+            <!-- Navigation Cluster -->
+            <div class="keyboard-row" style="margin-top: 10px;">
+                <div class="key" data-key="Insert">Ins</div>
+                <div class="key" data-key="Home">Home</div>
+                <div class="key" data-key="PageUp">PgUp</div>
+                <div style="min-width: 20px;"></div>
+                <div class="key" data-key="Delete">Del</div>
+                <div class="key" data-key="End">End</div>
+                <div class="key" data-key="PageDown">PgDn</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="startKeyboardBtn" class="button">Start Keyboard Test</button>
+            <button id="stopKeyboardBtn" class="button" style="display: none;">Stop Test</button>
+        </div>
+
+        <div id="keyboardStatus"></div>
     </div>
 
     <script>
@@ -922,9 +1125,163 @@
         // Initial status message
         showTrackpadStatus('Click the left or right mouse button to test your trackpad buttons', 'info');
 
+        // ===== KEYBOARD TEST CODE =====
+        const keyboardMessage = document.getElementById('keyboardMessage');
+        const keyboardContainer = document.getElementById('keyboardContainer');
+        const keyboardStatus = document.getElementById('keyboardStatus');
+        const startKeyboardBtn = document.getElementById('startKeyboardBtn');
+        const stopKeyboardBtn = document.getElementById('stopKeyboardBtn');
+
+        let keyboardTestActive = false;
+        let keyboardAudioContext = null;
+        let pressedKeys = new Set();
+
+        function showKeyboardStatus(text, type) {
+            keyboardStatus.innerHTML = text;
+            keyboardStatus.className = 'status ' + type;
+        }
+
+        function playKeyClick() {
+            if (!keyboardAudioContext) return;
+
+            // Create a short click sound
+            const oscillator = keyboardAudioContext.createOscillator();
+            const gainNode = keyboardAudioContext.createGain();
+
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(800, keyboardAudioContext.currentTime);
+
+            // Very short envelope for a click sound
+            gainNode.gain.setValueAtTime(0.1, keyboardAudioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, keyboardAudioContext.currentTime + 0.02);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(keyboardAudioContext.destination);
+
+            oscillator.start(keyboardAudioContext.currentTime);
+            oscillator.stop(keyboardAudioContext.currentTime + 0.02);
+        }
+
+        function getKeyElement(key) {
+            // Normalize key for lookup
+            const normalizedKey = key.toLowerCase();
+
+            // Try exact match first
+            let keyElement = document.querySelector(`.key[data-key="${key}"]`);
+
+            // Try lowercase match for letters
+            if (!keyElement) {
+                keyElement = document.querySelector(`.key[data-key="${normalizedKey}"]`);
+            }
+
+            return keyElement;
+        }
+
+        function handleKeyDown(event) {
+            if (!keyboardTestActive) return;
+
+            // Prevent default for certain keys to avoid browser shortcuts
+            if (['F1', 'F3', 'F5', 'F11', 'Tab'].includes(event.key)) {
+                event.preventDefault();
+            }
+
+            const key = event.key;
+            const code = event.code;
+
+            // Don't re-trigger for held keys
+            if (pressedKeys.has(code)) return;
+            pressedKeys.add(code);
+
+            // Find the key element
+            let keyElement = getKeyElement(key) || document.querySelector(`.key[data-key="${code}"]`);
+
+            if (keyElement) {
+                // Add active state
+                keyElement.classList.add('active');
+
+                // Mark as pressed (permanently)
+                if (!keyElement.classList.contains('pressed')) {
+                    keyElement.classList.add('pressed');
+                    playKeyClick();
+                }
+            }
+        }
+
+        function handleKeyUp(event) {
+            if (!keyboardTestActive) return;
+
+            const key = event.key;
+            const code = event.code;
+
+            pressedKeys.delete(code);
+
+            // Find the key element
+            let keyElement = getKeyElement(key) || document.querySelector(`.key[data-key="${code}"]`);
+
+            if (keyElement) {
+                // Remove active state (but keep pressed state)
+                keyElement.classList.remove('active');
+            }
+        }
+
+        function startKeyboardTest() {
+            keyboardTestActive = true;
+            keyboardAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+            keyboardMessage.style.display = 'none';
+            keyboardContainer.style.display = 'block';
+
+            startKeyboardBtn.style.display = 'none';
+            stopKeyboardBtn.style.display = 'inline-block';
+
+            showKeyboardStatus('Press keys on your keyboard. Pressed keys will be highlighted with a green border.', 'info');
+
+            // Add event listeners
+            document.addEventListener('keydown', handleKeyDown);
+            document.addEventListener('keyup', handleKeyUp);
+        }
+
+        function stopKeyboardTest() {
+            keyboardTestActive = false;
+
+            // Remove event listeners
+            document.removeEventListener('keydown', handleKeyDown);
+            document.removeEventListener('keyup', handleKeyUp);
+
+            if (keyboardAudioContext) {
+                keyboardAudioContext.close();
+                keyboardAudioContext = null;
+            }
+
+            // Count pressed keys
+            const pressedCount = document.querySelectorAll('.key.pressed').length;
+            const totalKeys = document.querySelectorAll('.key').length;
+
+            keyboardMessage.style.display = 'block';
+            keyboardMessage.innerHTML = `Test stopped. You tested ${pressedCount} out of ${totalKeys} keys.`;
+            keyboardContainer.style.display = 'none';
+
+            startKeyboardBtn.style.display = 'inline-block';
+            stopKeyboardBtn.style.display = 'none';
+
+            // Reset all keys
+            document.querySelectorAll('.key').forEach(key => {
+                key.classList.remove('active', 'pressed');
+            });
+
+            pressedKeys.clear();
+        }
+
+        // Event listeners for keyboard test
+        startKeyboardBtn.addEventListener('click', startKeyboardTest);
+        stopKeyboardBtn.addEventListener('click', stopKeyboardTest);
+
         // Clean up all tests when page is closed
         window.addEventListener('beforeunload', () => {
             cleanupSpeaker();
+            if (keyboardAudioContext) {
+                keyboardAudioContext.close();
+            }
         });
     </script>
 </body>
