@@ -1225,9 +1225,10 @@
 
             let keyElement = null;
 
-            // Special handling for backslash (works in Safari, Firefox, Chrome)
-            // Match if key is backslash/pipe, OR if code is Backslash/IntlBackslash (but NOT if key is backtick)
-            if (key === '\\' || key === '|' || ((code === 'Backslash' || code === 'IntlBackslash') && key !== '`' && key !== '¬')) {
+            // Special handling for backslash (works in Safari, Firefox, Chrome, Edge)
+            // Match if key is backslash/pipe, OR if code is Backslash/IntlBackslash
+            // BUT exclude backtick, not-sign, hash, tilde (Windows UK keyboard has hash on Backslash code)
+            if (key === '\\' || key === '|' || ((code === 'Backslash' || code === 'IntlBackslash') && key !== '`' && key !== '¬' && key !== '#' && key !== '~')) {
                 keyElement = document.querySelector(`.key[data-key="\\\\"]`);
             }
 
@@ -1273,9 +1274,10 @@
 
             let keyElement = null;
 
-            // Special handling for backslash (works in Safari, Firefox, Chrome)
-            // Match if key is backslash/pipe, OR if code is Backslash/IntlBackslash (but NOT if key is backtick)
-            if (key === '\\' || key === '|' || ((code === 'Backslash' || code === 'IntlBackslash') && key !== '`' && key !== '¬')) {
+            // Special handling for backslash (works in Safari, Firefox, Chrome, Edge)
+            // Match if key is backslash/pipe, OR if code is Backslash/IntlBackslash
+            // BUT exclude backtick, not-sign, hash, tilde (Windows UK keyboard has hash on Backslash code)
+            if (key === '\\' || key === '|' || ((code === 'Backslash' || code === 'IntlBackslash') && key !== '`' && key !== '¬' && key !== '#' && key !== '~')) {
                 keyElement = document.querySelector(`.key[data-key="\\\\"]`);
             }
 
