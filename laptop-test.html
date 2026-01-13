@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laptop Webcam Test</title>
+    <title>Laptop Hardware Test - Webcam & Microphone</title>
     <style>
         * {
             margin: 0;
@@ -111,6 +111,35 @@
             margin-top: 20px;
         }
 
+        .container + .container {
+            margin-top: 30px;
+        }
+
+        #audioCanvas {
+            width: 100%;
+            height: 150px;
+            border-radius: 10px;
+            background: #f5f5f5;
+            display: none;
+        }
+
+        #audioMessage {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            font-size: 16px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        .timer {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            margin-top: 15px;
+        }
+
         @media (max-width: 600px) {
             .container {
                 padding: 20px;
@@ -141,6 +170,23 @@
         </div>
 
         <div id="status"></div>
+    </div>
+
+    <div class="container">
+        <h1>Microphone Test Tool</h1>
+        <p class="subtitle">Test if your laptop's microphone is working properly</p>
+
+        <canvas id="audioCanvas"></canvas>
+        <div id="audioMessage">Click the button below to start the microphone test</div>
+        <div id="timer" class="timer" style="display: none;"></div>
+
+        <div class="controls">
+            <button id="startAudioBtn" class="button">Start Microphone Test</button>
+            <button id="stopAudioBtn" class="button" style="display: none;">Stop Recording</button>
+            <button id="playbackBtn" class="button" style="display: none;">Play Recording</button>
+        </div>
+
+        <div id="audioStatus"></div>
     </div>
 
     <script>
@@ -289,6 +335,260 @@
             if (stream) {
                 stream.getTracks().forEach(track => track.stop());
             }
+        });
+
+        // ===== MICROPHONE TEST CODE =====
+        const audioCanvas = document.getElementById('audioCanvas');
+        const audioMessage = document.getElementById('audioMessage');
+        const audioStatus = document.getElementById('audioStatus');
+        const startAudioBtn = document.getElementById('startAudioBtn');
+        const stopAudioBtn = document.getElementById('stopAudioBtn');
+        const playbackBtn = document.getElementById('playbackBtn');
+        const timerDisplay = document.getElementById('timer');
+
+        let audioStream = null;
+        let audioContext = null;
+        let analyser = null;
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let recordedBlob = null;
+        let animationId = null;
+        let recordingTimer = null;
+        let recordingStartTime = null;
+
+        function showAudioStatus(text, type) {
+            audioStatus.innerHTML = text;
+            audioStatus.className = 'status ' + type;
+        }
+
+        function showAudioMessage(text) {
+            audioMessage.style.display = 'block';
+            audioMessage.innerHTML = text;
+            audioCanvas.style.display = 'none';
+            timerDisplay.style.display = 'none';
+        }
+
+        function showAudioCanvas() {
+            audioMessage.style.display = 'none';
+            audioCanvas.style.display = 'block';
+            timerDisplay.style.display = 'block';
+        }
+
+        function updateTimer(secondsRemaining) {
+            timerDisplay.textContent = `Recording: ${secondsRemaining}s remaining`;
+        }
+
+        function visualizeAudio() {
+            const canvas = audioCanvas;
+            const canvasContext = canvas.getContext('2d');
+            const width = canvas.width = canvas.offsetWidth;
+            const height = canvas.height = canvas.offsetHeight;
+
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            function draw() {
+                animationId = requestAnimationFrame(draw);
+
+                analyser.getByteFrequencyData(dataArray);
+
+                // Clear canvas
+                canvasContext.fillStyle = '#f5f5f5';
+                canvasContext.fillRect(0, 0, width, height);
+
+                // Draw frequency bars
+                const barCount = 64;
+                const barWidth = width / barCount;
+
+                for (let i = 0; i < barCount; i++) {
+                    const dataIndex = Math.floor(i * bufferLength / barCount);
+                    const barHeight = (dataArray[dataIndex] / 255) * height;
+
+                    // Gradient color based on intensity
+                    const intensity = dataArray[dataIndex] / 255;
+                    const hue = 250 - (intensity * 50); // Blue to purple gradient
+                    canvasContext.fillStyle = `hsl(${hue}, 70%, 60%)`;
+
+                    const x = i * barWidth;
+                    const y = height - barHeight;
+
+                    canvasContext.fillRect(x, y, barWidth - 2, barHeight);
+                }
+            }
+
+            draw();
+        }
+
+        async function startMicrophoneTest() {
+            try {
+                showAudioStatus('Requesting microphone access...', 'info');
+                startAudioBtn.disabled = true;
+                recordedChunks = [];
+                recordedBlob = null;
+
+                // Request audio stream
+                audioStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: false,
+                        noiseSuppression: false,
+                        autoGainControl: false
+                    }
+                });
+
+                // Verify we have audio tracks
+                const audioTracks = audioStream.getAudioTracks();
+                if (audioTracks.length === 0) {
+                    throw new Error('No audio tracks in stream');
+                }
+
+                // Set up Web Audio API for visualization
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+
+                const source = audioContext.createMediaStreamSource(audioStream);
+                source.connect(analyser);
+
+                // Set up MediaRecorder
+                mediaRecorder = new MediaRecorder(audioStream);
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    recordedBlob = new Blob(recordedChunks, { type: 'audio/webm' });
+                    playbackBtn.style.display = 'inline-block';
+                    showAudioStatus('✓ Recording complete! Click "Play Recording" to hear what was recorded.', 'success');
+                };
+
+                // Start recording
+                mediaRecorder.start();
+                recordingStartTime = Date.now();
+
+                showAudioCanvas();
+                visualizeAudio();
+
+                // 15 second countdown timer
+                let secondsRemaining = 15;
+                updateTimer(secondsRemaining);
+
+                recordingTimer = setInterval(() => {
+                    secondsRemaining--;
+                    if (secondsRemaining > 0) {
+                        updateTimer(secondsRemaining);
+                    } else {
+                        stopMicrophoneTest();
+                    }
+                }, 1000);
+
+                showAudioStatus('Recording in progress... Speak or make sounds to test your microphone.', 'info');
+                startAudioBtn.style.display = 'none';
+                stopAudioBtn.style.display = 'inline-block';
+
+            } catch (error) {
+                console.error('Error accessing microphone:', error);
+
+                let errorMessage = 'Unable to access microphone. ';
+
+                if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                    errorMessage += 'Microphone permission was denied. Please allow microphone access in your browser settings.';
+                } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+                    errorMessage += 'No microphone found. Please ensure your microphone is connected.';
+                } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                    errorMessage += 'Microphone is already in use by another application.';
+                } else {
+                    errorMessage += error.message || 'Unknown error occurred.';
+                }
+
+                showAudioMessage(errorMessage);
+                showAudioStatus('✗ Microphone test failed', 'error');
+                startAudioBtn.disabled = false;
+
+                cleanupAudio();
+            }
+        }
+
+        function stopMicrophoneTest() {
+            if (recordingTimer) {
+                clearInterval(recordingTimer);
+                recordingTimer = null;
+            }
+
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+
+            cleanupAudio();
+
+            showAudioMessage('Recording stopped. Click "Play Recording" to hear what was recorded.');
+            stopAudioBtn.style.display = 'none';
+            startAudioBtn.style.display = 'inline-block';
+            startAudioBtn.disabled = false;
+        }
+
+        function cleanupAudio() {
+            if (audioStream) {
+                audioStream.getTracks().forEach(track => track.stop());
+                audioStream = null;
+            }
+
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+
+            analyser = null;
+        }
+
+        function playRecording() {
+            if (!recordedBlob) {
+                showAudioStatus('No recording available to play.', 'error');
+                return;
+            }
+
+            const audio = new Audio(URL.createObjectURL(recordedBlob));
+
+            audio.onplay = () => {
+                showAudioStatus('Playing recording...', 'info');
+                playbackBtn.disabled = true;
+            };
+
+            audio.onended = () => {
+                showAudioStatus('Playback complete.', 'info');
+                playbackBtn.disabled = false;
+            };
+
+            audio.onerror = () => {
+                showAudioStatus('Error playing recording.', 'error');
+                playbackBtn.disabled = false;
+            };
+
+            audio.play();
+        }
+
+        // Check if getUserMedia is supported for audio
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showAudioMessage('Sorry, your browser does not support microphone access. Please use a modern browser like Chrome, Firefox, Safari, or Edge.');
+            showAudioStatus('✗ Browser not supported', 'error');
+            startAudioBtn.disabled = true;
+        }
+
+        // Event listeners for audio
+        startAudioBtn.addEventListener('click', startMicrophoneTest);
+        stopAudioBtn.addEventListener('click', stopMicrophoneTest);
+        playbackBtn.addEventListener('click', playRecording);
+
+        // Clean up audio when page is closed
+        window.addEventListener('beforeunload', () => {
+            cleanupAudio();
         });
     </script>
 </body>
