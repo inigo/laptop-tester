@@ -1180,10 +1180,8 @@
         function handleKeyDown(event) {
             if (!keyboardTestActive) return;
 
-            // Prevent default for certain keys to avoid browser shortcuts
-            if (['F1', 'F3', 'F5', 'F11', 'Tab'].includes(event.key)) {
-                event.preventDefault();
-            }
+            // Prevent ALL default actions during keyboard test to avoid browser/OS shortcuts
+            event.preventDefault();
 
             const key = event.key;
             const code = event.code;
@@ -1192,8 +1190,28 @@
             if (pressedKeys.has(code)) return;
             pressedKeys.add(code);
 
-            // Find the key element
-            let keyElement = getKeyElement(key) || document.querySelector(`.key[data-key="${code}"]`);
+            // Find the key element - try multiple matching strategies
+            let keyElement = getKeyElement(key);
+
+            // Try by code if key didn't work
+            if (!keyElement) {
+                keyElement = document.querySelector(`.key[data-key="${code}"]`);
+            }
+
+            // Special handling for backslash which might report as different codes
+            if (!keyElement && (key === '\\' || code === 'Backslash' || code === 'IntlBackslash')) {
+                keyElement = document.querySelector(`.key[data-key="\\\\"]`);
+            }
+
+            // Special handling for quote
+            if (!keyElement && (key === "'" || code === 'Quote')) {
+                keyElement = document.querySelector(`.key[data-key="'"]`);
+            }
+
+            // Special handling for slash
+            if (!keyElement && (key === "/" || code === 'Slash')) {
+                keyElement = document.querySelector(`.key[data-key="/"]`);
+            }
 
             if (keyElement) {
                 // Add active state
@@ -1215,12 +1233,51 @@
 
             pressedKeys.delete(code);
 
-            // Find the key element
-            let keyElement = getKeyElement(key) || document.querySelector(`.key[data-key="${code}"]`);
+            // Find the key element - use same matching logic as keydown
+            let keyElement = getKeyElement(key);
+
+            if (!keyElement) {
+                keyElement = document.querySelector(`.key[data-key="${code}"]`);
+            }
+
+            // Special handling for backslash
+            if (!keyElement && (key === '\\' || code === 'Backslash' || code === 'IntlBackslash')) {
+                keyElement = document.querySelector(`.key[data-key="\\\\"]`);
+            }
+
+            // Special handling for quote
+            if (!keyElement && (key === "'" || code === 'Quote')) {
+                keyElement = document.querySelector(`.key[data-key="'"]`);
+            }
+
+            // Special handling for slash
+            if (!keyElement && (key === "/" || code === 'Slash')) {
+                keyElement = document.querySelector(`.key[data-key="/"]`);
+            }
 
             if (keyElement) {
                 // Remove active state (but keep pressed state)
                 keyElement.classList.remove('active');
+            }
+        }
+
+        function clearActiveKeys() {
+            // Clear all active highlights (but keep the green pressed borders)
+            document.querySelectorAll('.key.active').forEach(key => {
+                key.classList.remove('active');
+            });
+            pressedKeys.clear();
+        }
+
+        function handleWindowBlur() {
+            if (keyboardTestActive) {
+                clearActiveKeys();
+            }
+        }
+
+        function handleVisibilityChange() {
+            if (keyboardTestActive && document.hidden) {
+                clearActiveKeys();
             }
         }
 
@@ -1239,6 +1296,8 @@
             // Add event listeners
             document.addEventListener('keydown', handleKeyDown);
             document.addEventListener('keyup', handleKeyUp);
+            window.addEventListener('blur', handleWindowBlur);
+            document.addEventListener('visibilitychange', handleVisibilityChange);
         }
 
         function stopKeyboardTest() {
@@ -1247,6 +1306,8 @@
             // Remove event listeners
             document.removeEventListener('keydown', handleKeyDown);
             document.removeEventListener('keyup', handleKeyUp);
+            window.removeEventListener('blur', handleWindowBlur);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
 
             if (keyboardAudioContext) {
                 keyboardAudioContext.close();
