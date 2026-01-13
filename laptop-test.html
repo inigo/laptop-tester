@@ -355,6 +355,8 @@
         let animationId = null;
         let recordingTimer = null;
         let recordingStartTime = null;
+        let playbackAudioContext = null;
+        let playbackSource = null;
 
         function showAudioStatus(text, type) {
             audioStatus.innerHTML = text;
@@ -402,7 +404,10 @@
 
                 for (let i = 0; i < barCount; i++) {
                     const dataIndex = Math.floor(i * bufferLength / barCount);
-                    const barHeight = (dataArray[dataIndex] / 255) * height;
+                    // Apply 2x scaling to make bars visible but not too tall
+                    let barHeight = (dataArray[dataIndex] / 255) * height * 2;
+                    // Cap at canvas height to prevent overflow
+                    barHeight = Math.min(barHeight, height);
 
                     // Gradient color based on intensity
                     const intensity = dataArray[dataIndex] / 255;
@@ -441,16 +446,25 @@
                     throw new Error('No audio tracks in stream');
                 }
 
-                // Set up Web Audio API for visualization
+                // Set up Web Audio API for visualization and recording
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 analyser = audioContext.createAnalyser();
                 analyser.fftSize = 256;
 
-                const source = audioContext.createMediaStreamSource(audioStream);
-                source.connect(analyser);
+                // Add gain node to boost audio signal significantly for recording
+                const gainNode = audioContext.createGain();
+                gainNode.gain.value = 8.0; // 8x boost for much louder recording
 
-                // Set up MediaRecorder
-                mediaRecorder = new MediaRecorder(audioStream);
+                const source = audioContext.createMediaStreamSource(audioStream);
+                source.connect(gainNode);
+                gainNode.connect(analyser);
+
+                // Create a destination to route the gained audio back to a MediaStream for recording
+                const destination = audioContext.createMediaStreamDestination();
+                gainNode.connect(destination);
+
+                // Set up MediaRecorder with the boosted audio stream
+                mediaRecorder = new MediaRecorder(destination.stream);
 
                 mediaRecorder.ondataavailable = (event) => {
                     if (event.data.size > 0) {
@@ -548,30 +562,52 @@
             analyser = null;
         }
 
-        function playRecording() {
+        async function playRecording() {
             if (!recordedBlob) {
                 showAudioStatus('No recording available to play.', 'error');
                 return;
             }
 
-            const audio = new Audio(URL.createObjectURL(recordedBlob));
+            // Clean up previous playback if any
+            if (playbackAudioContext) {
+                playbackAudioContext.close();
+            }
 
-            audio.onplay = () => {
+            try {
                 showAudioStatus('Playing recording...', 'info');
                 playbackBtn.disabled = true;
-            };
 
-            audio.onended = () => {
-                showAudioStatus('Playback complete.', 'info');
-                playbackBtn.disabled = false;
-            };
+                // Convert blob to array buffer
+                const arrayBuffer = await recordedBlob.arrayBuffer();
 
-            audio.onerror = () => {
+                // Create new audio context for playback
+                playbackAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+                // Decode audio data
+                const audioBuffer = await playbackAudioContext.decodeAudioData(arrayBuffer);
+
+                // Create source and gain node for boosted playback
+                playbackSource = playbackAudioContext.createBufferSource();
+                playbackSource.buffer = audioBuffer;
+
+                const playbackGain = playbackAudioContext.createGain();
+                playbackGain.gain.value = 2.0; // Additional 2x boost for playback
+
+                playbackSource.connect(playbackGain);
+                playbackGain.connect(playbackAudioContext.destination);
+
+                playbackSource.onended = () => {
+                    showAudioStatus('Playback complete.', 'info');
+                    playbackBtn.disabled = false;
+                };
+
+                playbackSource.start(0);
+
+            } catch (error) {
+                console.error('Error playing recording:', error);
                 showAudioStatus('Error playing recording.', 'error');
                 playbackBtn.disabled = false;
-            };
-
-            audio.play();
+            }
         }
 
         // Check if getUserMedia is supported for audio
@@ -589,6 +625,9 @@
         // Clean up audio when page is closed
         window.addEventListener('beforeunload', () => {
             cleanupAudio();
+            if (playbackAudioContext) {
+                playbackAudioContext.close();
+            }
         });
     </script>
 </body>
