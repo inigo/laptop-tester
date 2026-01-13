@@ -184,11 +184,44 @@
 
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
 
+                // Verify we have video tracks
+                const videoTracks = stream.getVideoTracks();
+                if (videoTracks.length === 0) {
+                    throw new Error('No video tracks in stream');
+                }
+
                 // Set the stream to the video element
                 video.srcObject = stream;
 
+                showStatus('Starting video stream...', 'info');
                 showVideo();
-                showStatus('✓ Webcam is working! Your camera is functioning correctly.', 'success');
+
+                // Wait for video to actually start playing
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => {
+                        reject(new Error('Video failed to start playing within 10 seconds'));
+                    }, 10000);
+
+                    video.addEventListener('playing', function onPlaying() {
+                        clearTimeout(timeout);
+                        video.removeEventListener('playing', onPlaying);
+
+                        // Verify video has dimensions
+                        if (video.videoWidth === 0 || video.videoHeight === 0) {
+                            reject(new Error('Video stream has no dimensions'));
+                        } else {
+                            resolve();
+                        }
+                    }, { once: true });
+
+                    video.addEventListener('error', function onError() {
+                        clearTimeout(timeout);
+                        video.removeEventListener('error', onError);
+                        reject(new Error('Video element error'));
+                    }, { once: true });
+                });
+
+                showStatus('✓ Webcam is working! Your camera is functioning correctly. If you cannot see an image, check whether there is a camera cover.', 'success');
 
                 startBtn.style.display = 'none';
                 stopBtn.style.display = 'inline-block';
@@ -215,6 +248,12 @@
                 showMessage(errorMessage);
                 showStatus('✗ Webcam test failed', 'error');
                 startBtn.disabled = false;
+
+                // Clean up stream if it was created
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
             }
         }
 
