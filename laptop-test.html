@@ -1223,8 +1223,18 @@
             if (pressedKeys.has(code)) return;
             pressedKeys.add(code);
 
+            let keyElement = null;
+
+            // Special handling for backslash (works in Safari, Firefox, Chrome)
+            // Match if key is backslash/pipe, OR if code is Backslash/IntlBackslash (but NOT if key is backtick)
+            if (key === '\\' || key === '|' || ((code === 'Backslash' || code === 'IntlBackslash') && key !== '`' && key !== '¬')) {
+                keyElement = document.querySelector(`.key[data-key="\\\\"]`);
+            }
+
             // Find the key element - try multiple matching strategies
-            let keyElement = getKeyElement(key);
+            if (!keyElement) {
+                keyElement = getKeyElement(key);
+            }
 
             // Try by code if key didn't work
             if (!keyElement) {
@@ -1237,11 +1247,6 @@
                 if (baseKey) {
                     keyElement = document.querySelector(`.key[data-key="${baseKey}"]`);
                 }
-            }
-
-            // Special handling for backslash which might report as different codes
-            if (!keyElement && (key === '\\' || code === 'Backslash' || code === 'IntlBackslash')) {
-                keyElement = document.querySelector(`.key[data-key="\\\\"]`);
             }
 
             if (keyElement) {
@@ -1266,8 +1271,18 @@
 
             pressedKeys.delete(code);
 
+            let keyElement = null;
+
+            // Special handling for backslash (works in Safari, Firefox, Chrome)
+            // Match if key is backslash/pipe, OR if code is Backslash/IntlBackslash (but NOT if key is backtick)
+            if (key === '\\' || key === '|' || ((code === 'Backslash' || code === 'IntlBackslash') && key !== '`' && key !== '¬')) {
+                keyElement = document.querySelector(`.key[data-key="\\\\"]`);
+            }
+
             // Find the key element - use same matching logic as keydown
-            let keyElement = getKeyElement(key);
+            if (!keyElement) {
+                keyElement = getKeyElement(key);
+            }
 
             if (!keyElement) {
                 keyElement = document.querySelector(`.key[data-key="${code}"]`);
@@ -1279,11 +1294,6 @@
                 if (baseKey) {
                     keyElement = document.querySelector(`.key[data-key="${baseKey}"]`);
                 }
-            }
-
-            // Special handling for backslash
-            if (!keyElement && (key === '\\' || code === 'Backslash' || code === 'IntlBackslash')) {
-                keyElement = document.querySelector(`.key[data-key="\\\\"]`);
             }
 
             if (keyElement) {
