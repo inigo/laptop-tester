@@ -1008,37 +1008,30 @@
 
                 const startTime = speakerAudioContext.currentTime;
 
-                // Phase 1: Center (0-3s)
+                // Phase 1: Center (0-2.25s)
                 speakerPhase.textContent = 'Center';
                 showSpeakerStatus('Playing notes from center speakers', 'info');
                 playNoteSequence(startTime, 0);
 
-                // Phase 2: Left (3-6s)
+                // Phase 2: Left (2.25-4.5s)
                 speakerTestTimer = setTimeout(() => {
                     speakerPhase.textContent = 'Left';
                     showSpeakerStatus('Playing notes from left speaker', 'info');
                     playNoteSequence(speakerAudioContext.currentTime, -1);
 
-                    // Phase 3: Right (6-9s)
+                    // Phase 3: Right (4.5-6.75s)
                     speakerTestTimer = setTimeout(() => {
                         speakerPhase.textContent = 'Right';
                         showSpeakerStatus('Playing notes from right speaker', 'info');
                         playNoteSequence(speakerAudioContext.currentTime, 1);
 
-                        // Phase 4: Center again (9-12s)
+                        // End test (6.75s)
                         speakerTestTimer = setTimeout(() => {
-                            speakerPhase.textContent = 'Center';
-                            showSpeakerStatus('Playing notes from center speakers', 'info');
-                            playNoteSequence(speakerAudioContext.currentTime, 0);
-
-                            // End test (12s)
-                            speakerTestTimer = setTimeout(() => {
-                                stopSpeakerTest();
-                                showSpeakerStatus('✓ Speaker test complete!', 'success');
-                            }, 3000);
-                        }, 3000);
-                    }, 3000);
-                }, 3000);
+                            stopSpeakerTest();
+                            showSpeakerStatus('✓ Speaker test complete!', 'success');
+                        }, 2250);
+                    }, 2250);
+                }, 2250);
 
             } catch (error) {
                 console.error('Error starting speaker test:', error);
