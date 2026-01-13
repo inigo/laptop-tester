@@ -2,6 +2,8 @@ Check hardware (webcam, microphone, speakers, keyboard, trackpad) on laptops
 
 Intended to help SHARE Oxford (https://shareoxford.org/) test donated laptops before passing them on.
 
+Running at https://inigo.github.io/laptop-tester/laptop-test.html
+
 ## Licence
 
 Copyright (C) 2026 Inigo Surguy. 
